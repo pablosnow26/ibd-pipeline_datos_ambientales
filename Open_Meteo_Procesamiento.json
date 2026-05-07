@@ -1,5 +1,5 @@
 {
-  "name": "Procesamiento 1",
+  "name": "Open_Meteo_Procesamiento",
   "nodes": [
     {
       "parameters": {
@@ -81,6 +81,41 @@
           "name": "RabbitMQ account"
         }
       }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        192,
+        176
+      ],
+      "id": "65650d22-cb39-4113-ba94-6fa88396ac57",
+      "name": "Convert to File1"
+    },
+    {
+      "parameters": {
+        "operation": "upload",
+        "bucketName": "access-data",
+        "fileName": "open_meteo_access",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.s3",
+      "typeVersion": 1,
+      "position": [
+        416,
+        176
+      ],
+      "id": "fa37c51f-cf4f-4edf-94bf-c7f6940fbd8a",
+      "name": "Upload a file1",
+      "credentials": {
+        "s3": {
+          "id": "lezjRo44SyRUxMvv",
+          "name": "S3 account"
+        }
+      }
     }
   ],
   "pinData": {},
@@ -114,7 +149,13 @@
     },
     "Code in JavaScript1": {
       "main": [
-        []
+        [
+          {
+            "node": "Convert to File1",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "RabbitMQ Trigger": {
@@ -127,6 +168,17 @@
           }
         ]
       ]
+    },
+    "Convert to File1": {
+      "main": [
+        [
+          {
+            "node": "Upload a file1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
@@ -134,7 +186,7 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "c4226bc4-9e19-4a91-b425-eaf7c5b5f645",
+  "versionId": "8452f878-632f-4b1f-bb0d-69e508b29f7b",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "c130b8a69454d9fb2344e27f355d8fec3c3eb1a0ab1afcb7950c2ba5ebd9ba0e"
