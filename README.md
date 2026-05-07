@@ -18,7 +18,9 @@ El pipeline utiliza:
 ### Arquitectura
 La arquitectura implementada sigue el siguiente flujo:
 
+```text
 Fuentes de datos (APIs) → n8n (Productor) → RabbitMQ → n8n (Consumidor) → MinIO (Zonas) → Jupyter (Análisis)
+```
 
 Toda la infraestructura está desplegada en contenedores Docker aislados que se comunican a través de una red virtual.
 
@@ -87,7 +89,17 @@ Credenciales por defecto:
 - RabbitMQ: user: `guest` | password: `guest`
 - MinIO: user: `minio` | password: `minio123`
 
+Pasos de configuración manual → antes de activar los flujos de trabajo en n8n, es necesario realizar estos pasos manuales:
 
+Añadir una nueva credencial de tipo S3 (MinIO) en n8n con los siguientes parámetros:
+  - Endpoint: http://minio:9000 (Nota: usar el nombre del contenedor, no localhost).
+  - Access Key: minio
+  - Secret Key: minio123
+  - Region: us-east-1
+  - Force Path Style: enabled
+
+Configuración de RabbtiMQ:
+  - Crear dos colas, una para cada API.
 
 
 
