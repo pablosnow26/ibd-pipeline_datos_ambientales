@@ -1,0 +1,154 @@
+{
+  "name": "Ingesta Datos Madrid",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 11
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -128,
+        0
+      ],
+      "id": "e0d1c551-591d-4a7f-8535-0b9747ea3489",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://datos.madrid.es/dataset/212629-0-estaciones-control-aire/resource/212629-0-estaciones-control-aire-csv/download/212629-0-estaciones-control-aire-csv.csv",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        80,
+        0
+      ],
+      "id": "b3fb01e8-6585-4321-913f-ec4d8c671000",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "options": {
+          "delimiter": ";"
+        }
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        416,
+        0
+      ],
+      "id": "061e9b86-89ed-4b63-a781-bf49f77e2179",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "queue": "estaciones_queue",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rabbitmq",
+      "typeVersion": 1.1,
+      "position": [
+        624,
+        0
+      ],
+      "id": "5b9f92c1-0c74-4db4-8781-c58a086ba57d",
+      "name": "RabbitMQ",
+      "credentials": {
+        "rabbitmq": {
+          "id": "o9r9DcWPEFj1qMfE",
+          "name": "RabbitMQ account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "upload",
+        "bucketName": "raw-data",
+        "fileName": "data_madrid_raw",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.s3",
+      "typeVersion": 1,
+      "position": [
+        224,
+        -176
+      ],
+      "id": "d39beea8-6106-4359-ad1f-91cef8407125",
+      "name": "Upload a file",
+      "credentials": {
+        "s3": {
+          "id": "cSxWhUEUIHbafMvf",
+          "name": "S3 account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Upload a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "RabbitMQ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "2a16fd59-ca24-4f35-ac22-6b2c0e74e28f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "970e4d6fa5ce5a16645ab309b102875e5b87e84bf7eb7c488826cb3ce662378d"
+  },
+  "id": "JpiaewKyp546Sjz9",
+  "tags": []
+}
