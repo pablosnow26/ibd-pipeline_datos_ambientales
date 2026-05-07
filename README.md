@@ -15,6 +15,8 @@ El pipeline utiliza:
 - **MinIO** como capa de almacenamiento del Data Lake.
 - **Jupyter Notebook + DuckDB / Pandas** para el entorno analítico final.
 
+<br>
+
 ### Arquitectura
 La arquitectura implementada sigue el siguiente flujo:
 
@@ -23,6 +25,8 @@ Fuentes de datos (APIs) → n8n (Productor) → RabbitMQ → n8n (Consumidor) �
 ```
 
 Toda la infraestructura está desplegada en contenedores Docker aislados que se comunican a través de una red virtual.
+
+<br>
 
 ### Componentes y rol
   Hemos divido la carga de trabajo en cuatro workflows distintos. Un par para cada API. Uno encargado de extraer los datos originales y enviarlos tanto a RabbitMQ como a la Zona Raw del Data Lake; el otro para leer a partir de la cola de RabbitMQ el mensaje que incluye los datos (content), procesar dichos datos y diferenciar sus procesos de transformación para enviar en un rama un fichero a la Zona Processed y, en otra rama, un fichero a la Zona Access.
@@ -35,12 +39,8 @@ Para cumplir con los requisitos, hemos utilizado los siguientes componentes (en 
   - Envía los datos originales a MinIO (raw-data).
   - Publica cada paquete de datos como un mensaje en la cola de RabbitMQ.
 
-<br>
-
 2. RabbitMQ
   - Actúa como intermediario (broker), desacoplando la fase de ingesta (rápida) de la fase de procesamiento (más lenta y pesada).
-
-<br>
 
 3. Workflow consumidor (n8n):
   -  Escucha la cola de RabbitMQ.
@@ -49,13 +49,13 @@ Para cumplir con los requisitos, hemos utilizado los siguientes componentes (en 
   -  Enriquece los datos geográficos transformando coordenadas en nombres de Distritos.
   -  Envía los datos procesados a MinIO creando versiones transformadas.
 
-<br>
-
 4. MinIO (Data Lake)
   - Organiza los datos en buckets lógicos:
       - raw-data: datos crudos.
       - processed-data: CSVs detallados con las variables de calidad del aire.
       - access-zone: archivos optimizados y particionados, listos para consumo analítico.
+
+<br>
 
 ### Desafíos técnicos y soluciones
 Durante el desarrollo de la práctica, nos enfrentamos a varios retos de infraestructura.
@@ -69,6 +69,8 @@ Durante el desarrollo de la práctica, nos enfrentamos a varios retos de infraes
   para conectar DuckDB con MinIO vía S3, recibimos un error HTTP 451 (Unavailable For Legal Reasons). El firewall de la red bloqueaba
   la descarga de binarios .gz desde contenedores Linux. Solución: trabajamos con una extensión de Windows de DuckDB en local, creando un notebook y conectándonos
   a MinIO desde ahí, consiguiendo leer los ficheros correctamente.
+
+<br>
 
 ### Despliegue con Docker
 Todos los servicios se despliegan utilizando docker-compose.
@@ -89,7 +91,9 @@ Credenciales por defecto:
 - RabbitMQ: user: `guest` | password: `guest`
 - MinIO: user: `minio` | password: `minio123`
 
-Pasos de configuración manual → antes de activar los flujos de trabajo en n8n, es necesario realizar estos pasos manuales:
+<br>
+
+### Pasos de configuración manual → antes de activar los flujos de trabajo en n8n, es necesario realizar estos pasos manuales:
 
 Añadir una nueva credencial de tipo S3 (MinIO) en n8n con los siguientes parámetros:
   - Endpoint: http://minio:9000 (Nota: usar el nombre del contenedor, no localhost).
