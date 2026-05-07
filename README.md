@@ -71,6 +71,20 @@ Durante el desarrollo de la práctica, nos enfrentamos a varios retos de infraes
 ### Despliegue con Docker
 Todos los servicios se despliegan utilizando docker-compose.
 
+Iniciar el sistema:
+
+```bash
+docker compose up -d
+
+Puntos de Acceso:
+- n8n: `http://localhost:5678`
+- RabbitMQ (UI): `http://localhost:15672`
+- MinIO (Console): `http://localhost:9001`
+- Jupyter Lab: `http://localhost:8888`
+
+Credenciales por defecto:
+- RabbitMQ: user: `guest` | password: `guest`
+- MinIO: user: `minio` | password: `minio123`
 
 
 
