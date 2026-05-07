@@ -1,0 +1,144 @@
+{
+  "name": "Procesamiento 1",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "// 1. Extraemos el texto plano de la cola y lo \"despertamos\" a JSON real\nconst textoMensaje = $input.first().json.content;\nlet datos = JSON.parse(textoMensaje);\n\n// ==========================================\n// TRANSFORMACIÓN 1: Limpieza y Formateo\n// ==========================================\n// Separamos la fecha y la hora en dos columnas distintas \n// para que luego sea más fácil agruparlas en el Data Lake.\nlet partesFecha = datos.fecha_hora.split(\"T\");\ndatos.fecha = partesFecha[0]; // \"2026-05-06\"\ndatos.hora = partesFecha[1];  // \"04:00\"\n\n// Redondeamos las coordenadas para quitar ruido\ndatos.latitud = Math.round(datos.latitud * 1000) / 1000;\ndatos.longitud = Math.round(datos.longitud * 1000) / 1000;\n\n\n// ==========================================\n// TRANSFORMACIÓN 2: Lógica de Negocio (Alertas)\n// ==========================================\n// Definimos umbrales de peligrosidad\nlet limiteNO2 = 40;  \nlet limitePM10 = 45; \n\n// Creamos un campo nuevo booleano (True/False)\nif (datos.no2 > limiteNO2 || datos.pm10 > limitePM10) {\n    datos.alerta_contaminacion = true;\n    datos.motivo_alerta = \"Alerta activa\";\n} else {\n    datos.alerta_contaminacion = false;\n    datos.motivo_alerta = \"Ninguno\";\n}\n\n// 2. Devolvemos el JSON enriquecido\nreturn [ { json: datos } ];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -224,
+        -32
+      ],
+      "id": "ab10f274-2a11-4153-ac1a-f11f4df25766",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "upload",
+        "bucketName": "processed-data",
+        "fileName": "open_meteo_processed.csv",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.s3",
+      "typeVersion": 1,
+      "position": [
+        416,
+        -32
+      ],
+      "id": "d99caf1f-b7de-43cd-9e14-5ca77bf8be2f",
+      "name": "Upload a file",
+      "credentials": {
+        "s3": {
+          "id": "lezjRo44SyRUxMvv",
+          "name": "S3 account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        192,
+        -32
+      ],
+      "id": "8330be8d-e0b5-456d-997a-6b8678b3c949",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Recogemos los datos que ya vienen limpios del nodo anterior\nlet entrada = $input.first().json;\n\n// 2. Lookup: Diccionario de coordenadas a distritos de Madrid\nconst distritos = {\n    \"40.41,-3.70\": \"Centro / Sol\",\n    \"40.42,-3.68\": \"Salamanca / Retiro\",\n    \"40.40,-3.70\": \"Arganzuela\",\n    \"40.45,-3.69\": \"Tetuán / Cuzco\"\n};\n\n// Generamos la clave redondeando a 2 decimales para que coincida\nlet clave = `${entrada.latitud.toFixed(2)},${entrada.longitud.toFixed(2)}`;\nlet nombre_distrito = distritos[clave] || \"Área Metropolitana\";\n\n// 3. Denormalización: Creamos el objeto final SOLO con lo que importa a negocio\nlet resumen = {\n    fecha: entrada.fecha,\n    hora: entrada.hora,\n    distrito: nombre_distrito,\n    alerta_activa: entrada.alerta_contaminacion,\n    motivo: entrada.motivo_alerta\n};\n\n// Devolvemos el objeto ligero\nreturn [ { json: resumen } ];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -48,
+        176
+      ],
+      "id": "82bfd1f1-4415-4ae4-ad35-97ec626dc780",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "queue": "cola_open_meteo",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rabbitmqTrigger",
+      "typeVersion": 1,
+      "position": [
+        -448,
+        -32
+      ],
+      "id": "21ae87c9-bbf3-41da-9f73-a90da64b6488",
+      "name": "RabbitMQ Trigger",
+      "credentials": {
+        "rabbitmq": {
+          "id": "SnqDbeLA3DpBqvZq",
+          "name": "RabbitMQ account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Upload a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        []
+      ]
+    },
+    "RabbitMQ Trigger": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "c4226bc4-9e19-4a91-b425-eaf7c5b5f645",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c130b8a69454d9fb2344e27f355d8fec3c3eb1a0ab1afcb7950c2ba5ebd9ba0e"
+  },
+  "id": "vNKAUrbGBSTPF5h7",
+  "tags": []
+}
