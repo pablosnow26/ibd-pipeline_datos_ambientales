@@ -75,6 +75,7 @@ Iniciar el sistema:
 
 ```bash
 docker compose up -d
+```
 
 Puntos de Acceso:
 - n8n: `http://localhost:5678`
