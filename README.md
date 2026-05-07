@@ -19,7 +19,7 @@ El pipeline utiliza:
 La arquitectura implementada sigue el siguiente flujo:
 
 ```text
-Fuentes de datos (APIs) → n8n (Productor) → RabbitMQ → n8n (Consumidor) → MinIO (Zonas) → Jupyter (Análisis)```
+Fuentes de datos (APIs) → n8n (Productor) → RabbitMQ → n8n (Consumidor) → MinIO (Zonas) → Jupyter (Análisis)´´´
 
 Toda la infraestructura está desplegada en contenedores Docker aislados que se comunican a través de una red virtual.
 
