@@ -38,17 +38,23 @@ Para cumplir con los requisitos, hemos utilizado los siguientes componentes (en 
   - Realiza peticiones HTTP a Open-Meteo y extrae los datos del día anterior al momento de ejecución.
   - Envía los datos originales a MinIO (raw-data).
   - Publica cada paquete de datos como un mensaje en la cola de RabbitMQ.
+
 <br>
+
 2. RabbitMQ
   - Actúa como intermediario (broker), desacoplando la fase de ingesta (rápida) de la fase de procesamiento (más lenta y pesada).
+
 <br>
+
 3. Workflow consumidor (n8n):
   -  Escucha la cola de RabbitMQ.
   -  Parsea el contenido JSON y lo transforma a formato tabular.
   -  Aplica lógica de negocio (ej. limpieza de nulos, detección de alertas de contaminación cruzando umbrales de NO2/PM10).
   -  Enriquece los datos geográficos transformando coordenadas en nombres de Distritos.
   -  Envía los datos procesados a MinIO creando versiones transformadas.
+
 <br>
+
 4. MinIO (Data Lake)
   - Organiza los datos en buckets lógicos:
       - raw-data: datos crudos.
