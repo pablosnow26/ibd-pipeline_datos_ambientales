@@ -9,16 +9,17 @@ al análisis de datos ambientales.
 
 El pipeline utiliza:
 
-- 'Open-Meteo API' y el Portal de Datos Abiertos de Madrid como fuentes de datos.
-- RabbitMQ como gestor de colas de mensajes (message broker).
-- n8n para la orquestación de flujos de trabajo.
-- MinIO como capa de almacenamiento del Data Lake.
-- Jupyter Notebook + DuckDB / Pandas para el entorno analítico final.
+- **Open-Meteo API** y el **Portal de Datos Abiertos de Madrid** como fuentes de datos.
+- **RabbitMQ** como gestor de colas de mensajes (*message broker*).
+- **n8n** para la orquestación de flujos de trabajo.
+- **MinIO** como capa de almacenamiento del Data Lake.
+- **Jupyter Notebook + DuckDB / Pandas** para el entorno analítico final.
 
 ### Arquitectura
 La arquitectura implementada sigue el siguiente flujo:
 
-Fuentes de datos (APIs) --> n8n (Productor) --> RabbitMQ --> n8n (Consumidor) --> MinIO (Zonas Data Lake) --> Jupyter (Análisis)
+```text
+Fuentes de datos (APIs) ➡️ n8n (Productor) ➡️ RabbitMQ ➡️ n8n (Consumidor) ➡️ MinIO (Zonas) ➡️ Jupyter (Análisis)
 
 Toda la infraestructura está desplegada en contenedores Docker aislados que se comunican a través de una red virtual.
 
