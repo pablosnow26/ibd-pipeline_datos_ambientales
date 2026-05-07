@@ -3,7 +3,7 @@
 ## Pipeline de Datos Ambientales - Ayuntamiento de Madrid
 
 ### Descripción general
-Esta implementación, gracias a la utilización de diferentes tecnologías englobadas en un paradigma de almacenamiento como es un Data Lake, nos permite adquirir información 
+  Esta implementación, gracias a la utilización de diferentes tecnologías englobadas en un paradigma de almacenamiento como es un Data Lake, nos permite adquirir información 
 de diferentes fuentes de datos heterogéneas y aunarlas en un entorno capaz de dar soporte a consultas que facilita la toma de decisiones del Ayuntamiento de Madrid en cuanto
 al análisis de datos ambientales.
 
@@ -18,14 +18,12 @@ El pipeline utiliza:
 ### Arquitectura
 La arquitectura implementada sigue el siguiente flujo:
 
-```text
 Fuentes de datos (APIs) → n8n (Productor) → RabbitMQ → n8n (Consumidor) → MinIO (Zonas) → Jupyter (Análisis)
-```text
 
 Toda la infraestructura está desplegada en contenedores Docker aislados que se comunican a través de una red virtual.
 
 ### Componentes y rol
-Hemos divido la carga de trabajo en cuatro workflows distintos. Un par para cada API. Uno encargado de extraer los datos originales y enviarlos tanto a RabbitMQ como a la Zona Raw del Data Lake; el otro para leer a partir de la cola de RabbitMQ el mensaje que incluye los datos (content), procesar dichos datos y diferenciar sus procesos de transformación para enviar en un rama un fichero a la Zona Processed y, en otra rama, un fichero a la Zona Access.
+  Hemos divido la carga de trabajo en cuatro workflows distintos. Un par para cada API. Uno encargado de extraer los datos originales y enviarlos tanto a RabbitMQ como a la Zona Raw del Data Lake; el otro para leer a partir de la cola de RabbitMQ el mensaje que incluye los datos (content), procesar dichos datos y diferenciar sus procesos de transformación para enviar en un rama un fichero a la Zona Processed y, en otra rama, un fichero a la Zona Access.
 
 Para cumplir con los requisitos, hemos utilizado los siguientes componentes (en este caso, lo explicamos para la API de Open-Meteo, pero el proceso es el mismo para ambas fuentes de datos):
 
