@@ -9,7 +9,7 @@ al análisis de datos ambientales.
 
 El pipeline utiliza:
 
-- Open-Meteo API y el Portal de Datos Abiertos de Madrid como fuentes de datos.
+- 'Open-Meteo API' y el Portal de Datos Abiertos de Madrid como fuentes de datos.
 - RabbitMQ como gestor de colas de mensajes (message broker).
 - n8n para la orquestación de flujos de trabajo.
 - MinIO como capa de almacenamiento del Data Lake.
