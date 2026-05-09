@@ -1,0 +1,207 @@
+{
+  "name": "Open_Meteo_Analytics",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "ddd154d6-52c8-4d71-85f6-91ed2993d32f",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "bucketName": "cleaned-data",
+        "options": {
+          "folderKey": "={{ $json.Year }}/{{ $json.month }}/{{ $json.day }}/"
+        }
+      },
+      "type": "n8n-nodes-base.s3",
+      "typeVersion": 1,
+      "position": [
+        432,
+        0
+      ],
+      "id": "d4c6ce7d-5e4c-4c4b-aaf6-1f1aba336343",
+      "name": "Get many files",
+      "credentials": {
+        "s3": {
+          "id": "kxkD2mI6rUZ5A3eY",
+          "name": "S3 account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "bucketName": "cleaned-data",
+        "fileKey": "={{ $json.Key }}"
+      },
+      "type": "n8n-nodes-base.s3",
+      "typeVersion": 1,
+      "position": [
+        656,
+        0
+      ],
+      "id": "1ba22010-fb9c-41d7-a366-5ca26cf9b070",
+      "name": "Download a file",
+      "credentials": {
+        "s3": {
+          "id": "kxkD2mI6rUZ5A3eY",
+          "name": "S3 account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        1072,
+        0
+      ],
+      "id": "3c08e96f-dbd5-4b92-a29f-e24208b827a0",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nif (items.length === 0) return [];\n\nlet resultado = items.map(item => {\n    let datosLimpios = item.json;\n    \n    // 1. Cogemos la fecha original del campo 'timestamp'\n    let fecha = new Date(datosLimpios.timestamp); \n    \n    // 2. Restamos 1 día\n    fecha.setDate(fecha.getDate() - 1);\n    \n    // 3. Extraemos el año\n    datosLimpios.year = fecha.getFullYear().toString();\n    \n    // 4. Extraemos el mes sumándole 1 y forzamos los 2 dígitos (ej: '05')\n    datosLimpios.month = String(fecha.getMonth() + 1).padStart(2, '0');\n    \n    // 5. Extraemos el día y forzamos los 2 dígitos (ej: '08')\n    datosLimpios.day = String(fecha.getDate()).padStart(2, '0');\n    \n    // Opcional: eliminar el timestamp original si quieres el JSON limpio\n    // delete datosLimpios.timestamp; \n    \n    return {\n        json: datosLimpios\n    };\n});\n\nreturn resultado;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        0
+      ],
+      "id": "2581af8d-500e-45a8-bc39-7940b45eabf4",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nif (items.length === 0) return [];\n\nlet todasLasHoras = [];\n\n// Recorremos los archivos descargados (las 24 horas)\nfor (let i = 0; i < items.length; i++) {\n    // 1. ABRIMOS EL ARCHIVO BINARIO\n    // Leemos el contenido de la propiedad 'data'\n    let buffer = await this.helpers.getBinaryDataBuffer(i, 'data');\n    let contenidoJson = JSON.parse(buffer.toString('utf8'));\n\n    // 2. CORRECCIÓN DE FORMATO\n    // Si el JSON viene dentro de una lista [ {datos} ], extraemos el objeto\n    if (Array.isArray(contenidoJson)) {\n        contenidoJson = contenidoJson[0];\n    }\n\n    // 3. LIMPIEZA DE COLUMNAS PARA EL CSV\n    // Eliminamos el año, mes y día explícitamente para que no sean columnas\n    // delete contenidoJson.year;\n    // delete contenidoJson.month;\n    // delete contenidoJson.day;\n    \n    // 4. AÑADIMOS LA HORA A LA LISTA\n    // Envolvemos el objeto en la etiqueta \"json\" que exige n8n por cada ítem\n    todasLasHoras.push({ json: contenidoJson });\n}\n\n// 5. Devolvemos los 24 ítems sueltos a n8n\nreturn todasLasHoras;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        864,
+        0
+      ],
+      "id": "7db4fd6c-6e0f-4810-a6c4-378f511d88ac",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "upload",
+        "bucketName": "processed-data",
+        "fileName": "={{ $('Code in JavaScript1').item.json.year }}_{{ $('Code in JavaScript1').item.json.month }}_{{ $('Code in JavaScript1').item.json.day }}.csv",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.s3",
+      "typeVersion": 1,
+      "position": [
+        1280,
+        0
+      ],
+      "id": "53ef1dcf-340d-4c8e-b372-5adfe5457966",
+      "name": "Upload a file",
+      "credentials": {
+        "s3": {
+          "id": "kxkD2mI6rUZ5A3eY",
+          "name": "S3 account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many files": {
+      "main": [
+        [
+          {
+            "node": "Download a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download a file": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Get many files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Upload a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "9db1f61e-2be3-44fd-89fc-2358ad7d73ca",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6e4188e52aba7bce1013a05e1221068263475514c32493355e71dac104a5499d"
+  },
+  "id": "ZeP3WxpJ3SIsjJPy",
+  "tags": []
+}

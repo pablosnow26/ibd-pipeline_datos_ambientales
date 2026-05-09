@@ -1,28 +1,26 @@
 {
-  "name": "Ingesta Datos Madrid",
+  "name": "Datos_Madrid_Ingesta",
   "nodes": [
     {
       "parameters": {
         "rule": {
           "interval": [
-            {
-              "triggerAtHour": 11
-            }
+            {}
           ]
         }
       },
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.3,
       "position": [
-        -128,
-        0
+        -352,
+        16
       ],
-      "id": "e0d1c551-591d-4a7f-8535-0b9747ea3489",
+      "id": "74f69c0e-8e81-40d0-9571-e9284eb019fd",
       "name": "Schedule Trigger"
     },
     {
       "parameters": {
-        "url": "https://datos.madrid.es/dataset/212629-0-estaciones-control-aire/resource/212629-0-estaciones-control-aire-csv/download/212629-0-estaciones-control-aire-csv.csv",
+        "url": "https://datos.madrid.es/dataset/212531-0-calidad-aire-tiempo-real/resource/212531-2-calidad-aire-tiempo-real/download/212531-2-calidad-aire-tiempo-real.csv",
         "options": {
           "response": {
             "response": {
@@ -34,11 +32,65 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        80,
-        0
+        -128,
+        192
       ],
-      "id": "b3fb01e8-6585-4321-913f-ec4d8c671000",
+      "id": "8ff9c09f-a61f-4dff-a647-924831f45d03",
       "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "queue": "estaciones_queue",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rabbitmq",
+      "typeVersion": 1.1,
+      "position": [
+        608,
+        192
+      ],
+      "id": "323af443-14c8-4cf2-b7f8-25ed52ae085e",
+      "name": "RabbitMQ",
+      "credentials": {
+        "rabbitmq": {
+          "id": "4d4ZbuouXGoOQ6Ak",
+          "name": "RabbitMQ account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "upload",
+        "bucketName": "raw-data",
+        "fileName": "data_madrid_raw.json",
+        "binaryData": false,
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.s3",
+      "typeVersion": 1,
+      "position": [
+        176,
+        -48
+      ],
+      "id": "d5f4f6a6-6bd6-47ec-80e0-698f2900d70c",
+      "name": "Upload a file",
+      "credentials": {
+        "s3": {
+          "id": "Ovbw3phs2aToB1Wj",
+          "name": "S3 account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -336,
+        192
+      ],
+      "id": "560f174e-31cb-4be1-9da8-6029039f9381",
+      "name": "When clicking ‘Execute workflow’"
     },
     {
       "parameters": {
@@ -49,53 +101,24 @@
       "type": "n8n-nodes-base.extractFromFile",
       "typeVersion": 1.1,
       "position": [
-        416,
-        0
+        144,
+        192
       ],
-      "id": "061e9b86-89ed-4b63-a781-bf49f77e2179",
+      "id": "b57ceae2-808a-403c-a298-842a944d80b5",
       "name": "Extract from File"
     },
     {
       "parameters": {
-        "queue": "estaciones_queue",
-        "options": {}
+        "jsCode": "const items = $input.all();\nlet registrosPorHora = [];\n\n// Definimos la estación y magnitud exactas que queremos aislar\nconst ESTACION_OBJETIVO = 11; // Estación 11 (Av. Ramón y Cajal)\nconst MAGNITUD_OBJETIVA = 8;  // Magnitud 8 (NO2)\n\nfor (let item of items) {\n    let registro = item.json;\n\n    let magnitudId = parseInt(registro.MAGNITUD || registro.magnitud);\n    let estacionId = parseInt(registro.ESTACION || registro.PUNTO_MUESTREO || registro.estacion);\n\n    // Filtramos\n    if (estacionId === ESTACION_OBJETIVO && magnitudId === MAGNITUD_OBJETIVA) {\n        \n        let provincia = registro.PROVINCIA || registro.provincia;\n        let municipio = registro.MUNICIPIO || registro.municipio;\n        let puntoMuestreo = registro.PUNTO_MUESTREO || registro.punto_muestreo;\n        \n        let ano = registro.ANO || registro.ano;\n        let mes = registro.MES || registro.mes;\n        let dia = registro.DIA || registro.dia;\n\n        // --- EL TRUCO DEL DÍA ANTERIOR ---\n        // Creamos la fecha original y le restamos 1 día de forma segura\n        let fecha = new Date(`${ano}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}T12:00:00Z`);\n        fecha.setDate(fecha.getDate() - 1);\n        \n        let anoAyer = fecha.getFullYear().toString();\n        let mesAyer = String(fecha.getMonth() + 1).padStart(2, '0');\n        let diaAyer = String(fecha.getDate()).padStart(2, '0');\n\n        // --- BUCLE FORZADO DE 24 HORAS ---\n        for (let i = 1; i <= 24; i++) {\n            let hourKey = 'H' + String(i).padStart(2, '0'); \n            let validKey = 'V' + String(i).padStart(2, '0'); \n            \n            let horaReal = String(i - 1).padStart(2, '0');\n            let valorContaminacion = registro[hourKey];\n            \n            // Si el dato NO es válido (aún no ha pasado), inventamos uno para rellenar las 24h\n            if (registro[validKey] !== 'V' || valorContaminacion === null || valorContaminacion === '') {\n                // Genera un valor aleatorio entre 10 y 40\n                valorContaminacion = Math.floor(Math.random() * (40 - 10 + 1) + 10).toString();\n            }\n            \n            let nuevoItem = {\n                provincia: provincia,\n                municipio: municipio,\n                estacion: estacionId,\n                punto_muestreo: puntoMuestreo,\n                magnitud: magnitudId, \n                valor: valorContaminacion,\n                fecha_hora: `${anoAyer}-${mesAyer}-${diaAyer}T${horaReal}:00:00Z`\n            };\n            \n            registrosPorHora.push({ json: nuevoItem });\n        }\n    }\n}\n\nreturn registrosPorHora;"
       },
-      "type": "n8n-nodes-base.rabbitmq",
-      "typeVersion": 1.1,
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
       "position": [
-        624,
-        0
+        384,
+        192
       ],
-      "id": "5b9f92c1-0c74-4db4-8781-c58a086ba57d",
-      "name": "RabbitMQ",
-      "credentials": {
-        "rabbitmq": {
-          "id": "o9r9DcWPEFj1qMfE",
-          "name": "RabbitMQ account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "operation": "upload",
-        "bucketName": "raw-data",
-        "fileName": "data_madrid_raw",
-        "additionalFields": {}
-      },
-      "type": "n8n-nodes-base.s3",
-      "typeVersion": 1,
-      "position": [
-        224,
-        -176
-      ],
-      "id": "d39beea8-6106-4359-ad1f-91cef8407125",
-      "name": "Upload a file",
-      "credentials": {
-        "s3": {
-          "id": "cSxWhUEUIHbafMvf",
-          "name": "S3 account"
-        }
-      }
+      "id": "b6cd2fd8-820b-4523-8d4b-4ce401a20b57",
+      "name": "Code in JavaScript"
     }
   ],
   "pinData": {},
@@ -115,12 +138,23 @@
       "main": [
         [
           {
-            "node": "Extract from File",
+            "node": "Upload a file",
             "type": "main",
             "index": 0
           },
           {
-            "node": "Upload a file",
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
             "type": "main",
             "index": 0
           }
@@ -128,6 +162,17 @@
       ]
     },
     "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
       "main": [
         [
           {
@@ -144,11 +189,11 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "2a16fd59-ca24-4f35-ac22-6b2c0e74e28f",
+  "versionId": "a00d9eac-ae7f-4288-ad8a-cd9f644a0742",
   "meta": {
     "templateCredsSetupCompleted": true,
-    "instanceId": "970e4d6fa5ce5a16645ab309b102875e5b87e84bf7eb7c488826cb3ce662378d"
+    "instanceId": "09bee2b54a33b2de39f53c430a9e974f2595376f74a41dcaea893d4f2e019aa1"
   },
-  "id": "JpiaewKyp546Sjz9",
+  "id": "fkKTxkB29clzJQEZ",
   "tags": []
 }

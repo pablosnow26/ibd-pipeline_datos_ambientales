@@ -12,10 +12,10 @@
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.3,
       "position": [
-        -320,
-        -16
+        0,
+        0
       ],
-      "id": "22eedc6e-9e29-4ad9-9231-e7ea1a1b892e",
+      "id": "e6ee66f9-baba-4ea3-bf81-de233b33723e",
       "name": "Schedule Trigger"
     },
     {
@@ -55,23 +55,23 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -112,
-        -16
+        240,
+        192
       ],
-      "id": "58c35d1f-7b6f-4062-b239-9ebb1f5427e4",
+      "id": "72120eb7-8ee1-4e42-bcfc-e0c3886ee1c6",
       "name": "HTTP Request"
     },
     {
       "parameters": {
-        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\n// 1. Obtenemos la respuesta de la API de Calidad del Aire\nconst data = $input.first().json;\nconst hourly = data.hourly;\nconst registros = [];\n\n// 2. Recorremos las 24 horas exactas de ayer\nfor (let i = 0; i < hourly.time.length; i++) {\n  // 3. Empaquetamos cada hora en su propio mensaje JSON\n  registros.push({\n    json: {\n      fecha_hora: hourly.time[i],\n      pm10: hourly.pm10[i],                 // Partículas PM10\n      pm2_5: hourly.pm2_5[i],               // Partículas PM2.5\n      no2: hourly.carbon_monoxide[i],      // Dióxido de Nitrógeno\n      latitud: data.latitude,\n      longitud: data.longitude\n    }\n  });\n}\n\n// 4. Salen 24 items hacia RabbitMQ\nreturn registros;"
+        "jsCode": "// 1. Obtenemos la respuesta de la API de Calidad del Aire\nconst data = $input.first().json;\nconst hourly = data.hourly;\nconst registros = [];\n\n// 2. Recorremos las 24 horas exactas de ayer\nfor (let i = 0; i < hourly.time.length; i++) {\n  // 3. Empaquetamos cada hora en su propio mensaje JSON\n  registros.push({\n    json: {\n      fecha_hora: hourly.time[i],\n      pm10: hourly.pm10[i],                 // Partículas PM10\n      pm2_5: hourly.pm2_5[i],               // Partículas PM2.5\n      no2: hourly.carbon_monoxide[i],      // Dióxido de Nitrógeno\n      latitud: data.latitude,\n      longitud: data.longitude\n    }\n  });\n}\n\n// 4. Salen 24 items hacia RabbitMQ\nreturn registros;"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        304,
-        -16
+        656,
+        192
       ],
-      "id": "233751f2-e1e4-4bde-8220-f9d665a4c656",
+      "id": "56736396-a809-4ace-9281-600046b2fb39",
       "name": "Code in JavaScript"
     },
     {
@@ -84,17 +84,11 @@
       "type": "n8n-nodes-base.rabbitmq",
       "typeVersion": 1.1,
       "position": [
-        512,
-        -16
+        864,
+        192
       ],
-      "id": "a3bf3d0e-1655-4bd0-9782-ea9b56b51817",
-      "name": "RabbitMQ",
-      "credentials": {
-        "rabbitmq": {
-          "id": "SnqDbeLA3DpBqvZq",
-          "name": "RabbitMQ account"
-        }
-      }
+      "id": "b46b79ed-b224-41cf-9cff-8c19d21bbbc4",
+      "name": "RabbitMQ"
     },
     {
       "parameters": {
@@ -106,17 +100,11 @@
       "type": "n8n-nodes-base.s3",
       "typeVersion": 1,
       "position": [
-        352,
-        -208
+        704,
+        0
       ],
-      "id": "04651cef-09d1-4527-94c6-bdc63d028740",
-      "name": "Upload a file",
-      "credentials": {
-        "s3": {
-          "id": "lezjRo44SyRUxMvv",
-          "name": "S3 account"
-        }
-      }
+      "id": "d6494cac-a389-411b-946f-c08f8f23dc7a",
+      "name": "Upload a file"
     },
     {
       "parameters": {
@@ -126,11 +114,22 @@
       "type": "n8n-nodes-base.convertToFile",
       "typeVersion": 1.1,
       "position": [
-        96,
-        -208
+        448,
+        0
       ],
-      "id": "becc87cc-09ec-48ac-a030-d1e3e2288dc6",
+      "id": "2d793b9f-814c-4aa7-b464-acb0848fe6fe",
       "name": "Convert to File"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        16,
+        192
+      ],
+      "id": "763c0248-3865-4b94-abe5-8f5eb7d3247f",
+      "name": "When clicking ‘Execute workflow’"
     }
   ],
   "pinData": {},
@@ -183,6 +182,17 @@
           }
         ]
       ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
@@ -190,11 +200,10 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "8f6a2737-4cfc-45f5-ba5d-7a87a0f60294",
+  "versionId": "13ca5f32-9226-435d-a334-5d8a991f955c",
   "meta": {
-    "templateCredsSetupCompleted": true,
-    "instanceId": "c130b8a69454d9fb2344e27f355d8fec3c3eb1a0ab1afcb7950c2ba5ebd9ba0e"
+    "instanceId": "09bee2b54a33b2de39f53c430a9e974f2595376f74a41dcaea893d4f2e019aa1"
   },
-  "id": "kx9tEI4pFD248xSS",
+  "id": "wcvVFXSWvWTMWF1l",
   "tags": []
 }

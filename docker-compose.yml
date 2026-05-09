@@ -44,8 +44,8 @@ services:
       sleep 5;
       /usr/bin/mc alias set myminio http://minio:9000 minio minio123;
       /usr/bin/mc mb myminio/raw-data || true;
+      /usr/bin/mc mb myminio/cleaned-data || true;
       /usr/bin/mc mb myminio/processed-data || true;
-      /usr/bin/mc mb myminio/access-data || true;
       echo '¡Buckets creados con éxito!';
       exit 0;
       "
@@ -79,10 +79,48 @@ services:
     environment:
       - JUPYTER_ENABLE_LAB=yes
 
+
+  superset:
+    build: .
+    ports:
+      - "8088:8088"
+    environment:
+      SUPERSET_SECRET_KEY: 'your_secret_key_here'
+    volumes:
+      - ./superset_config.py:/app/superset/superset_config.py
+    depends_on:
+      - postgres
+    command: >
+      bash -c "pip install psycopg2-binary &&
+      superset db upgrade &&
+      superset fab create-admin --username admin --firstname Admin --lastname User --email admin@superset.com --password admin &&
+      superset init &&
+      superset run -p 8088 --host=0.0.0.0"
+    networks:
+      - datalake
+  
+  postgres:
+    image: postgres:14
+    container_name: retail_dw
+    environment:
+      POSTGRES_USER: dwuser
+      POSTGRES_PASSWORD: dwpassword
+      POSTGRES_DB: retail_dw
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./datos_csv:/datos_csv
+      - ./init:/docker-entrypoint-initdb.d
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - datalake
+
+
 volumes:
   n8n_data:
   minio_data:
-  rabbitmq_data: 
+  rabbitmq_data:
+  postgres_data:
 
 networks:
   datalake:
