@@ -109,17 +109,23 @@ Credenciales por defecto:
 
 ---
 
-### Pasos de configuración manual → antes de activar los flujos de trabajo en n8n, es necesario realizar estos pasos manuales:
+### Configuración manual requerida
 
-Añadir una nueva credencial de tipo S3 (MinIO) en n8n con los siguientes parámetros:
-  - Endpoint: http://minio:9000 (Nota: usar el nombre del contenedor, no localhost).
-  - Access Key: minio
-  - Secret Key: minio123
-  - Region: us-east-1
-  - Force Path Style: enabled
+Antes de activar los flujos, realiza estos pasos:
 
-Configuración de RabbtiMQ:
-  - Crear dos colas, una para cada API.
+1. Credenciales S3 en n8n:
+  - Endpoint: `http://minio:9000`
+  - Access/Secret Key: `minio` / `minio123`
+  - Force Path Style: `Enabled`
+
+2. Conexión de Apache Superset a PostgreSQL:
+  - En el panel de Superset, añade una nueva base de datos.
+  - Nombre de la conexión: `retail_dw`
+  - User/Password: `dwuser` / `dwpassword`
+  - Nombre base de datos: `retail_dw`
+
+3. Colas en RabbitMQ:
+  - Crear manualmente las colas especificadas en los nodos de RabbitMQ de n8n para evitar errores de conexión inicial.
 
 
 
