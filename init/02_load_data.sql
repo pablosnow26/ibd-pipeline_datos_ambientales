@@ -13,7 +13,7 @@ CREATE TEMP TABLE staging_mediciones (
 
 -- 2. Cargar el archivo CSV en la tabla temporal
 COPY staging_mediciones 
-FROM "/datos_csv/2026_05_08.csv"
+FROM '/datos_csv/2026_05_08.csv'
 WITH (FORMAT csv, HEADER true, DELIMITER ",");
 
 -- 3. Poblar la Dimensión de Fechas (dim_date)
