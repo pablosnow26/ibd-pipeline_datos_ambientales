@@ -129,7 +129,7 @@ Antes de activar los flujos, realiza estos pasos:
 
 ---
 
-### Consultas desde el Jupyter
+### Consultas desde un Jupyter Notebook
 
 Se puede realizar cualquier consulta deseada. Por ejemplo:
 
