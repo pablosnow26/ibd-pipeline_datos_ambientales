@@ -12,10 +12,10 @@
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.3,
       "position": [
-        -576,
-        -16
+        0,
+        0
       ],
-      "id": "8c04b09e-67f7-438b-bacf-34274a94cb2f",
+      "id": "34fa3e8d-5b52-492b-91f8-0bfbd9db7bdf",
       "name": "Schedule Trigger"
     },
     {
@@ -23,20 +23,20 @@
         "operation": "getAll",
         "bucketName": "cleaned-data",
         "options": {
-          "folderKey": "={{ $json.Year }}/{{ $json.month }}/{{ $json.day }}/"
+          "folderKey": "={{ $json.Year }}/{{ $json.month }}/{{ $json.day}}/"
         }
       },
       "type": "n8n-nodes-base.s3",
       "typeVersion": 1,
       "position": [
-        -144,
-        -16
+        432,
+        0
       ],
-      "id": "48865ebc-b388-4d07-b4ee-cb216c4b8fcb",
+      "id": "ff4bcf48-7d15-48df-99a9-36cb7b9ad217",
       "name": "Get many files",
       "credentials": {
         "s3": {
-          "id": "Ovbw3phs2aToB1Wj",
+          "id": "Xs3HmMLylFKegrOX",
           "name": "S3 account"
         }
       }
@@ -49,75 +49,76 @@
       "type": "n8n-nodes-base.s3",
       "typeVersion": 1,
       "position": [
-        80,
-        -16
+        656,
+        0
       ],
-      "id": "76d6416c-53c9-45b8-8b3a-d25c1d29c352",
+      "id": "c7b06240-43a5-4256-83e1-2e449ebbc047",
       "name": "Download a file",
       "credentials": {
         "s3": {
-          "id": "Ovbw3phs2aToB1Wj",
+          "id": "Xs3HmMLylFKegrOX",
           "name": "S3 account"
         }
       }
     },
     {
       "parameters": {
+        "binaryPropertyName": "=data",
         "options": {}
       },
       "type": "n8n-nodes-base.convertToFile",
       "typeVersion": 1.1,
       "position": [
-        496,
-        -16
+        1072,
+        0
       ],
-      "id": "cf363053-8c03-46c3-89c2-4ef9a5a68bd8",
+      "id": "19ee60c3-24c2-406e-adb6-3819ee695cab",
       "name": "Convert to File"
     },
     {
       "parameters": {
-        "jsCode": "const items = $input.all();\nif (items.length === 0) return [];\n\nlet resultado = items.map(item => {\n    let datosLimpios = item.json;\n    \n    // 1. Cogemos la fecha original del campo 'timestamp'\n    let fecha = new Date(datosLimpios.timestamp); \n    \n    // 2. Restamos 1 día\n    fecha.setDate(fecha.getDate() - 1);\n    \n    // 3. Extraemos el año\n    datosLimpios.year = fecha.getFullYear().toString();\n    \n    // 4. Extraemos el mes sumándole 1 y forzamos los 2 dígitos (ej: '05')\n    datosLimpios.month = String(fecha.getMonth() + 1).padStart(2, '0');\n    \n    // 5. Extraemos el día y forzamos los 2 dígitos (ej: '08')\n    datosLimpios.day = String(fecha.getDate()).padStart(2, '0');\n    \n    // Opcional: eliminar el timestamp original si quieres el JSON limpio\n    // delete datosLimpios.timestamp; \n    \n    return {\n        json: datosLimpios\n    };\n});\n\nreturn resultado;"
+        "jsCode": "const items = $input.all();\nif (items.length === 0) return [];\n\nlet resultado = items.map(item => {\n    let datosLimpios = item.json;\n    \n    // 1. Cogemos la fecha original del campo 'timestamp'\n    let fecha = new Date(datosLimpios.timestamp); \n    \n    // 2. Extraemos el año\n    datosLimpios.year = fecha.getFullYear().toString();\n    \n    // 3. Extraemos el mes sumándole 1 y forzamos los 2 dígitos (ej: '05')\n    datosLimpios.month = String(fecha.getMonth() + 1).padStart(2, '0');\n    \n    // 4. Extraemos el día y forzamos los 2 dígitos (ej: '08')\n    datosLimpios.day = String(fecha.getDate() - 1).padStart(2, '0');\n    \n    // Opcional: eliminar el timestamp original si quieres el JSON limpio\n    // delete datosLimpios.timestamp; \n    \n    return {\n        json: datosLimpios\n    };\n});\n\nreturn resultado;"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -352,
-        -16
+        224,
+        0
       ],
-      "id": "513c7df6-ed27-4b3c-b861-116572f7d386",
+      "id": "747e963a-ab60-47b8-a720-3bd1dd58d26a",
       "name": "Code in JavaScript1"
     },
     {
       "parameters": {
-        "jsCode": "const items = $input.all();\nif (items.length === 0) return [];\n\nlet todasLasHoras = [];\n\n// Recorremos los archivos descargados (las 24 horas)\nfor (let i = 0; i < items.length; i++) {\n    // 1. ABRIMOS EL ARCHIVO BINARIO\n    // Leemos el contenido de la propiedad 'data'\n    let buffer = await this.helpers.getBinaryDataBuffer(i, 'data');\n    let contenidoJson = JSON.parse(buffer.toString('utf8'));\n\n    // 2. CORRECCIÓN DE FORMATO\n    // Si el JSON viene dentro de una lista [ {datos} ], extraemos el objeto\n    if (Array.isArray(contenidoJson)) {\n        contenidoJson = contenidoJson[0];\n    }\n\n    // 3. LIMPIEZA DE COLUMNAS PARA EL CSV\n    // Eliminamos el año, mes y día explícitamente para que no sean columnas\n    delete contenidoJson.year;\n    delete contenidoJson.month;\n    delete contenidoJson.day;\n    \n    // 4. AÑADIMOS LA HORA A LA LISTA\n    // Envolvemos el objeto en la etiqueta \"json\" que exige n8n por cada ítem\n    todasLasHoras.push({ json: contenidoJson });\n}\n\n// 5. Devolvemos los 24 ítems sueltos a n8n\nreturn todasLasHoras;"
+        "jsCode": "const items = $input.all();\nif (items.length === 0) return [];\n\nlet todasLasHoras = [];\n\n// Recorremos los archivos descargados (las 24 horas)\nfor (let i = 0; i < items.length; i++) {\n    // 1. ABRIMOS EL ARCHIVO BINARIO\n    // Leemos el contenido de la propiedad 'data'\n    let buffer = await this.helpers.getBinaryDataBuffer(i, 'data');\n    let contenidoJson = JSON.parse(buffer.toString('utf8'));\n\n    // 2. CORRECCIÓN DE FORMATO\n    // Si el JSON viene dentro de una lista [ {datos} ], extraemos el objeto\n    if (Array.isArray(contenidoJson)) {\n        contenidoJson = contenidoJson[0];\n    }\n\n    // 3. LIMPIEZA DE COLUMNAS PARA EL CSV\n    // Eliminamos el año, mes y día explícitamente para que no sean columnas\n    // delete contenidoJson.year;\n    // delete contenidoJson.month;\n    // delete contenidoJson.day;\n    delete contenidoJson.fecha_procesamiento;\n    delete contenidoJson.latitud;\n    delete contenidoJson.longitud;\n    \n    // 4. AÑADIMOS LA HORA A LA LISTA\n    todasLasHoras.push({ json: contenidoJson });\n}\n\n// 5. Devolvemos los 24 ítems sueltos a n8n\nreturn todasLasHoras;"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        288,
-        -16
+        864,
+        0
       ],
-      "id": "845a3a96-efdc-400e-a995-b69607f82849",
+      "id": "ec574418-afd1-449c-b28c-021819751b27",
       "name": "Code in JavaScript"
     },
     {
       "parameters": {
         "operation": "upload",
         "bucketName": "processed-data",
-        "fileName": "={{ $('Code in JavaScript1').item.json.year }}_{{ $('Code in JavaScript1').item.json.month }}_{{ $('Code in JavaScript1').item.json.day }}.csv",
+        "fileName": "={{ $('Code in JavaScript1').item.json.year }}_{{ $('Code in JavaScript1').item.json.month }}_{{ $('Code in JavaScript1').item.json.day}}.csv",
         "additionalFields": {}
       },
       "type": "n8n-nodes-base.s3",
       "typeVersion": 1,
       "position": [
-        704,
-        -16
+        1280,
+        0
       ],
-      "id": "bdb8223d-fb55-421e-b2d9-4a9b01df2e21",
+      "id": "d3152fd4-89e2-46c2-99a2-4e71d60a4057",
       "name": "Upload a file",
       "credentials": {
         "s3": {
-          "id": "Ovbw3phs2aToB1Wj",
+          "id": "Xs3HmMLylFKegrOX",
           "name": "S3 account"
         }
       }
@@ -197,11 +198,11 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "7a4c53ba-bc77-4cf5-a474-6c787c116928",
+  "versionId": "d80aa136-e082-46fe-b9bc-8d153aa831d3",
   "meta": {
     "templateCredsSetupCompleted": true,
-    "instanceId": "09bee2b54a33b2de39f53c430a9e974f2595376f74a41dcaea893d4f2e019aa1"
+    "instanceId": "cadd8722fe09051288783ffaf2c36fdad107f5546418fb2c936630e3547d1a8a"
   },
-  "id": "57ENWtmco6YdBqfs",
+  "id": "DET96cDpyz174QEq",
   "tags": []
 }

@@ -15,7 +15,7 @@
         0,
         0
       ],
-      "id": "e6ee66f9-baba-4ea3-bf81-de233b33723e",
+      "id": "977506fa-24dc-47c7-b57c-05c8086c8f7e",
       "name": "Schedule Trigger"
     },
     {
@@ -58,7 +58,7 @@
         240,
         192
       ],
-      "id": "72120eb7-8ee1-4e42-bcfc-e0c3886ee1c6",
+      "id": "d4758a40-3bbd-4f58-a41f-28bdbd99ef5f",
       "name": "HTTP Request"
     },
     {
@@ -71,7 +71,7 @@
         656,
         192
       ],
-      "id": "56736396-a809-4ace-9281-600046b2fb39",
+      "id": "5fab5794-6270-4db6-9ec2-74115599f43d",
       "name": "Code in JavaScript"
     },
     {
@@ -87,8 +87,14 @@
         864,
         192
       ],
-      "id": "b46b79ed-b224-41cf-9cff-8c19d21bbbc4",
-      "name": "RabbitMQ"
+      "id": "75cb5a9b-38d4-46ae-b26d-6c343f0139e4",
+      "name": "RabbitMQ",
+      "credentials": {
+        "rabbitmq": {
+          "id": "UHxTfo7je0dbbcj3",
+          "name": "RabbitMQ account"
+        }
+      }
     },
     {
       "parameters": {
@@ -103,8 +109,14 @@
         704,
         0
       ],
-      "id": "d6494cac-a389-411b-946f-c08f8f23dc7a",
-      "name": "Upload a file"
+      "id": "2c438f37-a25d-4de7-8643-93b87b93d078",
+      "name": "Upload a file",
+      "credentials": {
+        "s3": {
+          "id": "Xs3HmMLylFKegrOX",
+          "name": "S3 account"
+        }
+      }
     },
     {
       "parameters": {
@@ -117,7 +129,7 @@
         448,
         0
       ],
-      "id": "2d793b9f-814c-4aa7-b464-acb0848fe6fe",
+      "id": "2335e0c8-4d5f-46cb-a071-76075ebe6318",
       "name": "Convert to File"
     },
     {
@@ -128,7 +140,7 @@
         16,
         192
       ],
-      "id": "763c0248-3865-4b94-abe5-8f5eb7d3247f",
+      "id": "385e0a9c-fa2b-4353-adfe-ca1ebf912b21",
       "name": "When clicking ‘Execute workflow’"
     }
   ],
@@ -200,10 +212,11 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "13ca5f32-9226-435d-a334-5d8a991f955c",
+  "versionId": "30124cf6-e26a-4c6c-8f6c-d6deae3392f5",
   "meta": {
-    "instanceId": "09bee2b54a33b2de39f53c430a9e974f2595376f74a41dcaea893d4f2e019aa1"
+    "templateCredsSetupCompleted": true,
+    "instanceId": "cadd8722fe09051288783ffaf2c36fdad107f5546418fb2c936630e3547d1a8a"
   },
-  "id": "wcvVFXSWvWTMWF1l",
+  "id": "IL3HC4YXqxjDpEoh",
   "tags": []
 }

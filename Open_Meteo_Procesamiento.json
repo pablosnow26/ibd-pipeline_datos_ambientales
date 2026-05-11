@@ -3,7 +3,7 @@
   "nodes": [
     {
       "parameters": {
-        "jsCode": "// 1. Extraemos el texto plano de la cola y lo \"despertamos\" a JSON real\nconst textoMensaje = $input.first().json.content;\nlet datos = JSON.parse(textoMensaje);\nreturn  { json: datos } ;"
+        "jsCode": "// Extraemos el texto plano de la cola y lo convertimos a JSON real\nconst textoMensaje = $input.first().json.content;\nlet datos = JSON.parse(textoMensaje);\nreturn  { json: datos } ;"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -11,7 +11,7 @@
         192,
         0
       ],
-      "id": "dba76108-9f0c-494d-87d9-1054934e1121",
+      "id": "58135d33-017e-45a7-844b-740137d32a8a",
       "name": "Code in JavaScript"
     },
     {
@@ -27,11 +27,11 @@
         912,
         0
       ],
-      "id": "836c1d8b-d358-47a8-aa14-ab152d8729bc",
+      "id": "c0bf3db2-f99f-47c3-a2e8-4c36486277fb",
       "name": "Upload a file",
       "credentials": {
         "s3": {
-          "id": "Ovbw3phs2aToB1Wj",
+          "id": "Xs3HmMLylFKegrOX",
           "name": "S3 account"
         }
       }
@@ -50,7 +50,7 @@
         656,
         0
       ],
-      "id": "95d62f50-6805-4ab8-9bd5-b618f8c37caa",
+      "id": "ed0f93f9-ba40-4c4a-ac37-c697a0bd6499",
       "name": "Convert to File"
     },
     {
@@ -64,18 +64,18 @@
         0,
         0
       ],
-      "id": "66d0860f-6ba4-4373-9a53-3c6478b63c02",
+      "id": "69284270-292a-4d9b-ac6a-a1402cc3a392",
       "name": "RabbitMQ Trigger",
       "credentials": {
         "rabbitmq": {
-          "id": "4d4ZbuouXGoOQ6Ak",
+          "id": "UHxTfo7je0dbbcj3",
           "name": "RabbitMQ account"
         }
       }
     },
     {
       "parameters": {
-        "jsCode": "const items = $input.all();\nif (items.length === 0) return [];\n\n// Procesamos cada ítem y lo devolvemos como un elemento independiente de la lista\nlet resultado = items.map(item => {\n    let datosLimpios = item.json;\n    \n    // Extraemos la fecha y hora\n    let fecha = new Date(datosLimpios.fecha_hora); \n    datosLimpios.year = fecha.getFullYear().toString();\n    datosLimpios.month = String(fecha.getMonth() + 1).padStart(2, '0');\n    datosLimpios.day = String(fecha.getDate()).padStart(2, '0');\n    datosLimpios.hour = String(fecha.getHours()).padStart(2, '0');\n    \n    // Eliminamos los campos originales para que quede limpio\n    delete datosLimpios.fecha_hora;\n    delete datosLimpios.fecha;\n    \n    // IMPORTANTE: n8n exige que cada ítem tenga la clave \"json\" internamente\n    return {\n        json: datosLimpios\n    };\n});\n\n// Devolvemos la lista plana directamente\nreturn resultado;"
+        "jsCode": "const items = $input.all();\nif (items.length === 0) return [];\n\n// Procesamos cada ítem y lo devolvemos como un elemento independiente de la lista\nlet resultado = items.map(item => {\n    let datosLimpios = item.json;\n    \n    // Extraemos la fecha y hora\n    let fecha = new Date(datosLimpios.fecha_hora); \n    datosLimpios.year = fecha.getFullYear().toString();\n    datosLimpios.month = String(fecha.getMonth() + 1).padStart(2, '0');\n    datosLimpios.day = String(fecha.getDate()).padStart(2, '0');\n    datosLimpios.hour = String(fecha.getHours()).padStart(2, '0');\n    \n    // Eliminamos los campos originales para que quede limpio\n    delete datosLimpios.fecha_hora;\n    delete datosLimpios.fecha;\n    \n    return {\n        json: datosLimpios\n    };\n});\n\n// Devolvemos la lista plana directamente\nreturn resultado;"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -83,7 +83,7 @@
         432,
         0
       ],
-      "id": "4e95463f-55a2-4c01-8fb4-39999941f2c4",
+      "id": "ccf11d65-4ca6-4ca3-8c9c-a99cad40a033",
       "name": "Code in JavaScript1"
     }
   ],
@@ -139,11 +139,11 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "ce0c008e-2251-4177-b3c6-13aae9549ece",
+  "versionId": "ce7ddf9a-4ecc-4850-a7f7-fef64ae2f0df",
   "meta": {
     "templateCredsSetupCompleted": true,
-    "instanceId": "09bee2b54a33b2de39f53c430a9e974f2595376f74a41dcaea893d4f2e019aa1"
+    "instanceId": "cadd8722fe09051288783ffaf2c36fdad107f5546418fb2c936630e3547d1a8a"
   },
-  "id": "936SrDcxkkaEFlov",
+  "id": "OesGiVtJdXBspz3v",
   "tags": []
 }

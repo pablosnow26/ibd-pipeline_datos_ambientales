@@ -15,7 +15,7 @@
         0,
         0
       ],
-      "id": "ddd154d6-52c8-4d71-85f6-91ed2993d32f",
+      "id": "8d4bbcc1-6505-4da7-8dde-90bf41150447",
       "name": "Schedule Trigger"
     },
     {
@@ -32,11 +32,11 @@
         432,
         0
       ],
-      "id": "d4c6ce7d-5e4c-4c4b-aaf6-1f1aba336343",
+      "id": "afc46e52-27d1-42b2-9b93-f0144d1cda46",
       "name": "Get many files",
       "credentials": {
         "s3": {
-          "id": "kxkD2mI6rUZ5A3eY",
+          "id": "Xs3HmMLylFKegrOX",
           "name": "S3 account"
         }
       }
@@ -52,11 +52,11 @@
         656,
         0
       ],
-      "id": "1ba22010-fb9c-41d7-a366-5ca26cf9b070",
+      "id": "649d3e87-aad9-4b29-b29f-d1704bccb7ac",
       "name": "Download a file",
       "credentials": {
         "s3": {
-          "id": "kxkD2mI6rUZ5A3eY",
+          "id": "Xs3HmMLylFKegrOX",
           "name": "S3 account"
         }
       }
@@ -71,7 +71,7 @@
         1072,
         0
       ],
-      "id": "3c08e96f-dbd5-4b92-a29f-e24208b827a0",
+      "id": "8365c13b-1088-4f77-95f9-947981ada53a",
       "name": "Convert to File"
     },
     {
@@ -84,7 +84,7 @@
         224,
         0
       ],
-      "id": "2581af8d-500e-45a8-bc39-7940b45eabf4",
+      "id": "3af4c567-cb6f-4eb6-b73b-af773b21664c",
       "name": "Code in JavaScript1"
     },
     {
@@ -97,7 +97,7 @@
         864,
         0
       ],
-      "id": "7db4fd6c-6e0f-4810-a6c4-378f511d88ac",
+      "id": "bb3cb5d5-7abe-4ddb-a101-6f8e685729b2",
       "name": "Code in JavaScript"
     },
     {
@@ -113,11 +113,11 @@
         1280,
         0
       ],
-      "id": "53ef1dcf-340d-4c8e-b372-5adfe5457966",
+      "id": "5cef5944-0288-4132-96ce-ba659083344c",
       "name": "Upload a file",
       "credentials": {
         "s3": {
-          "id": "kxkD2mI6rUZ5A3eY",
+          "id": "Xs3HmMLylFKegrOX",
           "name": "S3 account"
         }
       }
@@ -197,11 +197,11 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "9db1f61e-2be3-44fd-89fc-2358ad7d73ca",
+  "versionId": "bf5aea6f-6ab4-4879-82be-b95f76079fa7",
   "meta": {
     "templateCredsSetupCompleted": true,
-    "instanceId": "6e4188e52aba7bce1013a05e1221068263475514c32493355e71dac104a5499d"
+    "instanceId": "cadd8722fe09051288783ffaf2c36fdad107f5546418fb2c936630e3547d1a8a"
   },
-  "id": "ZeP3WxpJ3SIsjJPy",
+  "id": "MQ4CqEvbbxNLGryx",
   "tags": []
 }

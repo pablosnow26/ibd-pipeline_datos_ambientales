@@ -12,11 +12,11 @@
         0,
         0
       ],
-      "id": "8b75a76c-a6fd-4d44-ae45-4ce5f6c6ef0a",
+      "id": "35467d8c-4652-4cb9-a865-f45b2eb90d37",
       "name": "RabbitMQ Trigger",
       "credentials": {
         "rabbitmq": {
-          "id": "4d4ZbuouXGoOQ6Ak",
+          "id": "UHxTfo7je0dbbcj3",
           "name": "RabbitMQ account"
         }
       }
@@ -41,12 +41,12 @@
         208,
         0
       ],
-      "id": "5e1c233c-7d40-467f-b247-423cee54c114",
+      "id": "18428d63-6c4c-4a88-8fcf-ce9924734b70",
       "name": "Edit Fields"
     },
     {
       "parameters": {
-        "jsCode": "for (const item of $input.all()) {\n    // Leemos los datos que nos llegan (del nodo Edit Fields)\n    const raw = item.json.estacion; \n    \n    // Convertimos el valor a número\n    let valorNum = parseFloat(raw.valor);\n    \n    // Creamos el objeto limpio 'data_processed' exactamente como lo espera el siguiente nodo\n    item.json.data_processed = {\n        id: raw.estacion,\n        nombre: \"Av. Ramón y Cajal\", // Asignamos el nombre de la estación 11\n        latitud: 40.45147,          // Latitud real de la estación 11\n        longitud: -3.67735,         // Longitud real de la estación 11\n        fecha_procesamiento: raw.fecha_hora,\n        \n        // Clasificamos el valor según la magnitud (8=NO2, 10=PM10, 11=PM2_5)\n        no2: raw.magnitud === 8 ? valorNum : null,\n        pm10: raw.magnitud === 10 ? valorNum : null,\n        pm2_5: raw.magnitud === 11 ? valorNum : null\n    };\n    \n    // Borramos lo antiguo para no arrastrar basura\n    delete item.json.estacion;\n}\n\nreturn $input.all();"
+        "jsCode": "for (const item of $input.all()) {\n    // Leemos los datos que nos llegan (del nodo Edit Fields)\n    const raw = item.json.estacion; \n    \n    // Convertimos el valor a número\n    let valorNum = parseFloat(raw.valor);\n    \n    // Creamos el objeto limpio 'data_processed'\n    item.json = {\n        id: raw.estacion,\n        provincia: raw.provincia,\n        municipio: raw.municipio,\n        fecha_procesamiento: raw.fecha_hora,\n        no2: raw.magnitud === 8 ? valorNum : null,\n        pm10: raw.magnitud === 10 ? valorNum : null,\n        pm2_5: raw.magnitud === 9 ? valorNum : null\n    };\n    \n    delete item.json.estacion;\n}\n\nreturn $input.all();"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -54,7 +54,7 @@
         416,
         0
       ],
-      "id": "17e17508-d268-4ce3-b210-0ec081da0fe1",
+      "id": "5eed6868-5b87-4300-a92a-fc0ed1a2db2a",
       "name": "Code in JavaScript"
     },
     {
@@ -70,7 +70,7 @@
         832,
         0
       ],
-      "id": "aa196d98-d213-47ca-a9b0-246b4fcf73c3",
+      "id": "0f3ccddb-117a-472d-a64e-b98f2c0a77a7",
       "name": "Convert to File"
     },
     {
@@ -86,18 +86,18 @@
         1040,
         0
       ],
-      "id": "abfc4f3b-f612-4638-8c98-13ffcd532e66",
+      "id": "7cd9b4e4-010e-4253-9b91-df9ad6ef4896",
       "name": "Upload a file",
       "credentials": {
         "s3": {
-          "id": "Ovbw3phs2aToB1Wj",
+          "id": "Xs3HmMLylFKegrOX",
           "name": "S3 account"
         }
       }
     },
     {
       "parameters": {
-        "jsCode": "const items = $input.all();\n\nfor (let item of items) {\n    // 1. Accedemos a la fecha que está dentro del objeto data_processed\n    let fechaString = item.json.data_processed.fecha_procesamiento;\n    let fecha = new Date(fechaString);\n\n    // 2. Extraemos las partes usando UTC para que no te cambie la hora por la zona horaria\n    item.json.year = fecha.getUTCFullYear().toString();\n    item.json.month = String(fecha.getUTCMonth() + 1).padStart(2, '0');\n    item.json.day = String(fecha.getUTCDate()).padStart(2, '0');\n    item.json.hour = String(fecha.getUTCHours()).padStart(2, '0');\n    \n    // 3. Sacamos la información de la estación a la raíz\n    item.json.nombre = item.json.data_processed.nombre;\n    item.json.latitud = item.json.data_processed.latitud;\n    item.json.longitud = item.json.data_processed.longitud;\n\n    // 4. Sacamos también los datos de contaminación\n    item.json.no2 = item.json.data_processed.no2;\n    item.json.pm10 = item.json.data_processed.pm10;\n    item.json.pm2_5 = item.json.data_processed.pm2_5;\n    \n    // 5. Borramos el objeto original anidado para dejar el JSON súper limpio\n    delete item.json.data_processed;\n}\n\nreturn items;"
+        "jsCode": "const items = $input.all();\n\nfor (let item of items) {\n    // 1. Accedemos a la fecha que está dentro del objeto data_processed\n    let fechaString = item.json.fecha_procesamiento;\n    let fecha = new Date(fechaString);\n\n    // 2. Extraemos las partes usando UTC para que no te cambie la hora por la zona horaria\n    item.json.year = fecha.getUTCFullYear().toString();\n    item.json.month = String(fecha.getUTCMonth() + 1).padStart(2, '0');\n    item.json.day = String(fecha.getUTCDate()).padStart(2, '0');\n    item.json.hour = String(fecha.getUTCHours()).padStart(2, '0');\n    \n    // 3. Añadimos los datos de localización\n    item.json.provincia = item.json.provincia;\n    item.json.municipio = item.json.municipio;\n\n    // 4. Sacamos también los datos de contaminación\n    item.json.no2 = item.json.no2;\n    item.json.pm10 = item.json.pm10;\n    item.json.pm2_5 = item.json.pm2_5;\n    \n}\n\nreturn items;"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -105,7 +105,7 @@
         624,
         0
       ],
-      "id": "b0385aec-9176-4549-b862-1c8cc8fcbf47",
+      "id": "381b37e9-480a-453b-91f3-d3c8b78c8ecf",
       "name": "Code in JavaScript1"
     }
   ],
@@ -172,11 +172,11 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "51060e84-2b5c-4ff4-ac6b-ec66085f6aa4",
+  "versionId": "d9ba4656-5bb7-4d86-ab19-bf45c9bd3cb7",
   "meta": {
     "templateCredsSetupCompleted": true,
-    "instanceId": "09bee2b54a33b2de39f53c430a9e974f2595376f74a41dcaea893d4f2e019aa1"
+    "instanceId": "cadd8722fe09051288783ffaf2c36fdad107f5546418fb2c936630e3547d1a8a"
   },
-  "id": "mABfTYrhQ0ExOqlx",
+  "id": "nF45CK2vFwvneiiY",
   "tags": []
 }
