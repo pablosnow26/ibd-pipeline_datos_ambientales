@@ -100,7 +100,7 @@ Puntos de Acceso:
 - RabbitMQ (UI): `http://localhost:15672`
 - MinIO (Console): `http://localhost:9001`
 - Jupyter Lab: `http://localhost:8888`
-- Apache Superset: `http://localhost:8088``
+- Apache Superset: `http://localhost:8088`
 
 Credenciales por defecto:
 - RabbitMQ: user: `guest` | password: `guest`
