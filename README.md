@@ -29,13 +29,13 @@ Toda la infraestructura está desplegada en contenedores Docker aislados que se 
 ---
 
 ### Componentes y rol
-  Hemos divido la carga de trabajo en cuatro workflows distintos. Un par para cada API. Uno encargado de extraer los datos originales y enviarlos tanto a RabbitMQ como a la Zona Raw del Data Lake; el otro para leer a partir de la cola de RabbitMQ el mensaje que incluye los datos (content), procesar dichos datos y diferenciar sus procesos de transformación para enviar en un rama un fichero a la Zona Processed y, en otra rama, un fichero a la Zona Access.
+  Hemos divido la carga de trabajo en cuatro workflows distintos. Un par para cada API. Uno encargado de extraer los datos originales y enviarlos tanto a RabbitMQ como a la Zona Raw del Data Lake; el otro para leer a partir de la cola de RabbitMQ el mensaje que incluye los datos (content), procesar dichos datos y diferenciar sus procesos de transformación para enviar en un rama un fichero a la Zona Cleaned y, en otra rama, un fichero a la Zona Processed.
 
 Para cumplir con los requisitos, hemos utilizado los siguientes componentes (en este caso, lo explicamos para la API de Open-Meteo, pero el proceso es el mismo para ambas fuentes de datos):
 
 1. Workflow productor (n8n)
   - Se ejecuta de forma periódica.
-  - Realiza peticiones HTTP a Open-Meteo y extrae los datos del día anterior al momento de ejecución.
+  - Realiza peticiones HTTP a una API y extrae los datos del día anterior al momento de ejecución.
   - Envía los datos originales a MinIO (raw-data).
   - Publica cada paquete de datos como un mensaje en la cola de RabbitMQ.
 
@@ -48,9 +48,8 @@ Para cumplir con los requisitos, hemos utilizado los siguientes componentes (en 
 
 3. Workflow consumidor (n8n):
   -  Escucha la cola de RabbitMQ.
-  -  Parsea el contenido JSON y lo transforma a formato tabular.
-  -  Aplica lógica de negocio (ej. limpieza de nulos, detección de alertas de contaminación cruzando umbrales de NO2/PM10).
-  -  Enriquece los datos geográficos transformando coordenadas en nombres de Distritos.
+  -  Parsea el contenido JSON.
+  -  Aplica lógica de negocio (ej. limpieza de nulos, selección de variables).
   -  Envía los datos procesados a MinIO creando versiones transformadas.
 
 <br>
@@ -58,8 +57,8 @@ Para cumplir con los requisitos, hemos utilizado los siguientes componentes (en 
 4. MinIO (Data Lake)
   - Organiza los datos en buckets lógicos:
       - raw-data: datos crudos.
-      - processed-data: CSVs detallados con las variables de calidad del aire.
-      - access-zone: archivos optimizados y particionados, listos para consumo analítico.
+      - cleaned-data: JSON con las variables de calidad del aire.
+      - processed-data: archivos optimizados y particionados, listos para consumo analítico.
 
 ---
 
