@@ -127,7 +127,17 @@ Antes de activar los flujos, realiza estos pasos:
 3. Colas en RabbitMQ:
   - Crear manualmente las colas especificadas en los nodos de RabbitMQ de n8n para evitar errores de conexión inicial.
 
+---
 
+### Consultas desde el Jupyter
+
+Se puede realizar cualquier consulta deseada. Por ejemplo:
+
+```bash
+query = """
+    SELECT * FROM read_csv_auto('s3://processed-data/*.csv')
+"""
+```
 
 
 
