@@ -23,7 +23,7 @@ El pipeline utiliza:
 La arquitectura implementada sigue el siguiente flujo:
 
 ```text
-Fuentes de datos (APIs) → n8n (Productor) → RabbitMQ → n8n (Consumidor) → MinIO (Zonas) & PostgreSQL (Tablas Hechos/Dimensiones) → Apache Superset (BI)
+Fuentes de datos (APIs) → n8n (Productor) → RabbitMQ → n8n (1er Consumidor) → MinIO (Zonas) → n8n (2º Consumidor) → MinIO (Zonas) → PostgreSQL (Tablas Hechos/Dimensiones) → Apache Superset (BI)
 ```
 
 Toda la infraestructura está desplegada en contenedores Docker aislados que se comunican a través de una red virtual.
@@ -31,13 +31,13 @@ Toda la infraestructura está desplegada en contenedores Docker aislados que se 
 ---
 
 ### Componentes y rol
-  Hemos divido la carga de trabajo en cuatro workflows distintos. Un par para cada API. Uno encargado de extraer los datos originales y enviarlos tanto a RabbitMQ como a la Zona Raw del Data Lake; el otro para leer a partir de la cola de RabbitMQ el mensaje que incluye los datos (content), procesar dichos datos y diferenciar sus procesos de transformación para enviar en un rama un fichero a la Zona Cleaned y, en otra rama, un fichero a la Zona Processed.
+  Hemos divido la carga de trabajo en seis workflows distintos. Tres para cada API. Uno encargado de extraer los datos originales y enviarlos tanto a RabbitMQ como a la Zona Raw del Data Lake; otro para leer a partir de la cola de RabbitMQ el mensaje que incluye los datos (content), procesar dichos datos y enviar a un sistema de directorios embebidos en la Zona Cleaned -en función de la fecha (año, mes y día)- un fichero JSON por cada hora del día; y el último, para agrupar esos 24 JSONs en un sólo archivo CSV final que se envía a la Zona Processed.
 
 Para cumplir con los requisitos, hemos utilizado los siguientes componentes (en este caso, lo explicamos para la API de Open-Meteo, pero el proceso es el mismo para ambas fuentes de datos):
 
 1. Workflow productor (n8n)
   - Se ejecuta de forma periódica.
-  - Realiza peticiones HTTP a una API y extrae los datos del día anterior al momento de ejecución.
+  - Realiza peticiones HTTP a la API y extrae los datos del día anterior al momento de ejecución.
   - Envía los datos originales a MinIO (raw-data).
   - Publica cada paquete de datos como un mensaje en la cola de RabbitMQ.
 
@@ -48,7 +48,7 @@ Para cumplir con los requisitos, hemos utilizado los siguientes componentes (en 
 
 <br>
 
-3. Workflow consumidor (n8n):
+3. Workflow consumidor 1 (n8n):
   -  Escucha la cola de RabbitMQ.
   -  Parsea el contenido JSON.
   -  Aplica lógica de negocio (ej. limpieza de nulos, selección de variables).
@@ -56,11 +56,17 @@ Para cumplir con los requisitos, hemos utilizado los siguientes componentes (en 
 
 <br>
 
-4. PostgreSQL & Apache Superset (capa analítica)
-  - PostgreSQL: actúa como un Data Warehouse en esquema de estrella. Almacena las tablas de hechos (mediciones)
-    y dimensiones (tiempo, geografía) preparadas para joins analíticos.
-  - Apache Superset: se conecta a PostgreSQL para generar paneles visuales en tiempo real,
-    incluyendo mapas de calor con las coordenadas de las estaciones y series temporales de la evolución del aire cruzadas con el clima.
+4. Workflow consumidor 2 (n8n):
+  - Descarga los JSONs del bucket Cleaned.
+  - Los une en un único fichero CSV final.
+  - Envía el fichero correspondiente a las mediciones de un día al bucket Processed.
+
+<br>
+
+5. PostgreSQL & Apache Superset (capa analítica)
+  - PostgreSQL: actúa como un Data Warehouse en esquema de estrella. Se alimenta del CSV final del paso anterior. Almacena las tablas de hechos (mediciones)
+    y dimensiones (tiempo, geografía) preparadas para consultas analíticas.
+  - Apache Superset: se conecta a PostgreSQL para generar paneles visuales en tiempo real.
 
 ---
 
@@ -69,15 +75,18 @@ Durante el desarrollo de la práctica, nos enfrentamos a varios retos de infraes
 
 - Conversión a Parquet en n8n: inicialmente quisimos generar archivos Parquet directamente en n8n usando nodos de código (Python/Pandas).
   Sin embargo, nos topamos con que las imágenes base recientes de n8n limitaban el uso de gestores de paquetes (apk o apt-get),
-  haciendo inestable la construcción del contenedor mediante un Dockerfile personalizado. Solución: decidimos asegurar el flujo manteniendo el formato nativo
-  CSV particionado, dejando la optimización analítica al motor de DuckDB, el cual procesa múltiples CSVs distribuidos a gran velocidad.
+  haciendo inestable la construcción del contenedor mediante un Dockerfile personalizado. Solución: decidimos asegurar el flujo manteniendo el formato
+  CSV, dejando la optimización analítica al motor de DuckDB, el cual procesa múltiples CSVs distribuidos a gran velocidad.
 
 - Bloqueo de red en la descarga de extensiones (DuckDB): al levantar el contenedor de Jupyter e intentar ejecutar INSTALL httpfs;
   para conectar DuckDB con MinIO vía S3, recibimos un error HTTP 451 (Unavailable For Legal Reasons). El firewall de la red bloqueaba
   la descarga de binarios .gz desde contenedores Linux. Solución: trabajamos con una extensión de Windows de DuckDB en local, creando un notebook y conectándonos
   a MinIO desde ahí, consiguiendo leer los ficheros correctamente.
 
-- Sobrecarga de memoria en n8n (OOM): inicialmente intentamos ingestar el dataset histórico de calidad del aire del Ayuntamiento de Madrid, el cual contenía más de 58.000 filas. Esto provocaba el colapso del contenedor de   n8n por falta de memoria RAM al intentar mapear los JSONs. Solución: cambiamos la fuente de datos al CSV de tiempo real (que contiene sólo la fotografía del momento). Utilizamos nodos Code de JavaScript para emular        mediante bucles el comportamiento Batch de 24 horas, rellenando huecos vacíos y procesando la información de forma ligera enviando 24 mensajes atómicos a RabbitMQ sin saturar la memoria.
+- Sobrecarga de memoria en n8n: inicialmente intentamos ingestar el dataset histórico de calidad del aire del Ayuntamiento de Madrid, el cual contenía más de 58.000 filas.
+  Esto provocaba el colapso del contenedor de n8n por falta de memoria RAM al intentar mapear los JSONs. Solución: cambiamos la fuente de datos al CSV de tiempo real
+  (que contiene sólo la fotografía del momento). Utilizamos nodos Code de JavaScript para emular mediante bucles el comportamiento Batch de 24 horas, rellenando huecos
+  vacíos y procesando la información de forma ligera enviando 24 mensajes a RabbitMQ sin saturar la memoria.
 
 - Desincronización temporal entre fuentes: nos dimos cuenta de que la API de Open-Meteo pedía parámetros históricos (ej: el día de ayer), pero el archivo del Ayuntamiento de Madrid es un CSV
   estático que se sobrescribe con el día actual. Esto generaba que al cruzar los datos en Superset, el clima y la contaminación no coincidieran en el mismo date_key. Solución: aplicamos un ajuste
@@ -105,7 +114,7 @@ Puntos de Acceso:
 Credenciales por defecto:
 - RabbitMQ: user: `guest` | password: `guest`
 - MinIO: user: `minio` | password: `minio123`
-- Superset: user: admin | password: admin
+- Superset: user: `admin` | password: `admin`
 
 ---
 
