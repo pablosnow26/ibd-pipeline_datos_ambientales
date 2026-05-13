@@ -127,14 +127,14 @@ Antes de activar los flujos, realiza estos pasos:
   - Access/Secret Key: `minio` / `minio123`
   - Force Path Style: `Enabled`
 
-2. Conexión de Apache Superset a PostgreSQL:
+2. Colas en RabbitMQ:
+  - Crear manualmente las colas especificadas en los nodos de RabbitMQ de n8n para evitar errores de conexión inicial.
+
+3. Conexión de Apache Superset a PostgreSQL:
   - En el panel de Superset, añade una nueva base de datos.
   - Nombre de la conexión: `retail_dw`
   - User/Password: `dwuser` / `dwpassword`
   - Nombre base de datos: `retail_dw`
-
-3. Colas en RabbitMQ:
-  - Crear manualmente las colas especificadas en los nodos de RabbitMQ de n8n para evitar errores de conexión inicial.
 
 ---
 
